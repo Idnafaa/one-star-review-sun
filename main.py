@@ -1,8 +1,9 @@
 """One-star review of something essential.
 
-The program writes a single deadpan one-star review, at most 160
-characters, of an everyday essential to /output/entry.txt (or to
-./entry.txt when /output is not mounted, so it can be run locally).
+A tiny program for the make.fun bounty of the same name. It writes one
+deadpan one-star review, at most 160 characters, of an everyday essential
+(the sun) to /output/entry.txt, falling back to ./entry.txt when /output
+is not mounted so the program can be run locally too.
 """
 
 import os
@@ -10,42 +11,42 @@ import sys
 
 MAX_CHARS = 160
 
-# The review: the sun is the most reliable thing in the world and still
-# manages to be rude about it every single morning.
 REVIEW = (
     "The sun: rises uninvited every morning, burns my skin, "
     "fades my curtains, and has never once apologised. One star."
 )
 
 
-def build_review() -> str:
-    """Return the review, refusing to emit anything over the cap."""
+def review_text() -> str:
+    """Return the review, collapsed to one line and within the cap."""
     text = " ".join(REVIEW.split())
     if not text:
         raise ValueError("review is empty")
     if len(text) > MAX_CHARS:
-        raise ValueError(f"review is {len(text)} chars, over the {MAX_CHARS} cap")
+        raise ValueError(
+            f"review is {len(text)} characters, over the {MAX_CHARS} cap"
+        )
     return text
 
 
 def output_path() -> str:
-    """Prefer the grader's /output directory, fall back to the cwd."""
-    if os.path.isdir("/output"):
+    """The grader reads /output/entry.txt; locally, use the cwd."""
+    if os.path.isdir("/output") and os.access("/output", os.W_OK):
         return "/output/entry.txt"
     return os.path.join(os.getcwd(), "entry.txt")
 
 
 def main() -> int:
-    text = build_review()
+    text = review_text()
     path = output_path()
-    parent = os.path.dirname(path)
-    if parent:
-        os.makedirs(parent, exist_ok=True)
+    directory = os.path.dirname(path)
+    if directory:
+        os.makedirs(directory, exist_ok=True)
+    # No trailing newline: the gate counts the file's characters, so the
+    # file holds exactly the review and nothing extra.
     with open(path, "w", encoding="utf-8") as handle:
-        # No trailing newline: the gate counts the file's characters,
-        # so the file holds exactly the review, nothing extra.
         handle.write(text)
-    print(f"wrote {len(text)} chars to {path}")
+    print(f"wrote {len(text)} characters to {path}")
     return 0
 
 
